@@ -1,39 +1,3 @@
-/****************************************************************************
- *
- *   Copyright (c) 2014 MAVlink Development Team. All rights reserved.
- *   Author: Trent Lukaczyk, <aerialhedgehog@gmail.com>
- *           Jaycee Lock,    <jaycee.lock@gmail.com>
- *           Lorenz Meier,   <lm@inf.ethz.ch>
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name PX4 nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- ****************************************************************************/
-
 /**
  * @file autopilot_interface.cpp
  *
@@ -41,9 +5,6 @@
  *
  * Functions for sending and recieving commands to an autopilot via MAVlink
  *
- * @author Trent Lukaczyk, <aerialhedgehog@gmail.com>
- * @author Jaycee Lock,    <jaycee.lock@gmail.com>
- * @author Lorenz Meier,   <lm@inf.ethz.ch>
  *
  */
 
@@ -465,9 +426,13 @@ enable_offboard_control()
 		// ----------------------------------------------------------------------
 		//   TOGGLE OFF-BOARD MODE
 		// ----------------------------------------------------------------------
-
+		int enable_cnt = 5;
+		int success;
 		// Sends the command to go off-board
-		int success = toggle_offboard_control( true );
+		while(enable_cnt--){
+			success = toggle_offboard_control( true );
+			usleep(400000);
+		}
 
 		// Check the command was written
 		if ( success )
@@ -520,6 +485,57 @@ disable_offboard_control()
 
 }
 
+// ------------------------------------------------------------------------------
+//   Armed
+// ------------------------------------------------------------------------------
+void
+Autopilot_Interface::
+vehicle_armed()
+{
+	// Should only send this command once
+	printf("IN ARMED MODE\n");
+
+	// Sends the command to armed
+	int success, call_cnt = 5;
+	
+	while(call_cnt--){
+
+		success = toggle_arm_disarm( true );
+		usleep(50000);
+	}
+
+	// Check the command was written
+	if ( !success )	{
+		fprintf(stderr,"Error: armed failed, could not write message\n");
+	}
+
+	printf("\n");
+
+
+}
+
+// ------------------------------------------------------------------------------
+//   Disarm
+// ------------------------------------------------------------------------------
+void
+Autopilot_Interface::
+vehicle_disarm()
+{
+	// Should only send this command once
+	printf("DISARM MODE\n");
+
+	// Sends the command to go off-board
+	int success = toggle_arm_disarm( false );
+
+	// Check the command was written
+	if ( !success ) {
+		fprintf(stderr,"Error: disarm failed could not write message\n");
+	}
+
+	printf("\n");
+}
+
+
 
 // ------------------------------------------------------------------------------
 //   Toggle Off-Board Mode
@@ -547,6 +563,31 @@ toggle_offboard_control( bool flag )
 	return len;
 }
 
+// ------------------------------------------------------------------------------
+//   Toggle arm-disarm Mode
+// ------------------------------------------------------------------------------
+int
+Autopilot_Interface::
+toggle_arm_disarm( bool flag )
+{
+	// Prepare command for off-board mode
+	mavlink_command_long_t com = { 0 };
+	com.target_system    = system_id;
+	com.target_component = autopilot_id;
+	com.command          = MAV_CMD_COMPONENT_ARM_DISARM;
+	com.confirmation     = true;
+	com.param1           = (float) flag; // flag >0.5 => start, <0.5 => stop
+
+	// Encode
+	mavlink_message_t message;
+	mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+	// Send the message
+	int len = serial_port->write_message(message);
+
+	// Done!
+	return len;
+}
 
 // ------------------------------------------------------------------------------
 //   STARTUP
@@ -821,7 +862,7 @@ write_thread(void)
 	// otherwise it will go into fail safe
 	while ( !time_to_exit )
 	{
-		usleep(250000);   // Stream at 4Hz
+		usleep(100000);   // Stream at 10Hz, need to > 2Hz
 		write_setpoint();
 	}
 

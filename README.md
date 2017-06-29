@@ -1,79 +1,32 @@
-C-UART Interface Example
+px4_offboard_interface Exampe
 ========================
 
-This is a simple MAVLink to UART interface example for *nix systems that can allow communication between Pixhawk and an offboard computer.
+This is a simple MAVLink to interface example for Unix-like systems that can 
+allow communication between Pixhawk and an offboard computer.
 
 This example will recieve one MAVlink message and send one MAVlink message.
 
 
-Building
+1. Building
 ========
 
 ```
-$ cd c_uart_interface_example/
+$ cd px4_offboard_interface/
 $ make
 ```
 
-Hardware Setup
-=========
-
-Connect the USB programming cable to your Pixhawk.  
-
-If you want to be able to interact with this example in Pixhawk's NuttX shell, you'll need a Telemetry Radio or an FTDI developer's cable.  See the Exploration section below for more detail.
-
-Note: Serial 5's receive pin is occupied by a second NuttX shell and can't be used to receive data without reconfiguration.
-
-Also Note: Using a UART (serial) connection should be preferred over using the USB port for flying systems.  The reason being that the driver for the USB port is much more complicated, so the UART is a much more trusted port for flight-critical functions.  To learn how this works though the USB port will be fine and instructive.
-
-Execution
-=========
-
-1. Login to Pixhawk's shell
------------------------
-
-```
-screen /dev/ttyACM0 57600 8N1
-<press enter>
-```
-
-You have to pick a port name, if the above example doesn't work, try searching for it with 
-```
-
-$ ls /dev/ttyACM* 
-$ ls /dev/ttyUSB*
-```
-
-Alternatively, plug in Pixhawk USB cable again and issue the command:
-```
-$ dmesg
-```
-The device described at the bottom of dmesg's output will be the port on which the Pixhawk is mounted. 
-
-The Pixhawk USB port will show up on a ```ttyACM*```, an FTDI cable will show up on a ```ttyUSB*```.
-
-
-2. Start a mavlink session on Pixhawk's USB port
------------------------
-
-```
-nsh> mavlink start -d /dev/ttyACM0
-```
-
-Pixhawk will start dumping machine data to the shell.
-
-Exit screen with the key sequence: ```Ctrl+A , K, Y```
-
-3. Run the Example Executable
+2. Run the Example Executable
 -----------------------------
 
 ```
-$ cd c_uart_interface_example/
-$ ./mavlink_control -d /dev/ttyACM0
+$ cd px4_offboard_interface/
+$ ./px4_offboard_control  -d /dev/ttyUSB0 -b 57600
 ```
 
 To stop the program, use the key sequence ```Ctrl-C```.
 
-Here's an example output:
+
+3. Here's an example output:
 
 ```
 OPEN PORT
@@ -81,69 +34,76 @@ Connected to /dev/ttyUSB0 with 57600 baud, 8 data bits, no parity, 1 stop bit (8
 
 START READ THREAD 
 
-CHECK FOR HEARTBEAT
+CHECK FOR MESSAGES
 Found
 
 GOT VEHICLE SYSTEM ID: 1
-GOT AUTOPILOT COMPONENT ID: 50
+GOT AUTOPILOT COMPONENT ID: 1
 
-INITIAL POSITION XYZ = [ 8.2935 , -1.1447 , -0.7609 ] 
-INITIAL POSITION YAW = 2.1539 
+INITIAL POSITION XYZ = [ 0.0145 , 0.0254 , -0.0009 ] 
+INITIAL POSITION YAW = 0.0016 
 
 START WRITE THREAD 
+
+IN ARMED MODE
 
 ENABLE OFFBOARD MODE
 
 SEND OFFBOARD COMMANDS
-POSITION SETPOINT XYZ = [ 3.2935 , -6.1447 , -0.7609 ] 
-POSITION SETPOINT YAW = 2.1539 
-0 CURRENT POSITION XYZ = [  8.2935 , -1.1447 , -0.7609 ] 
-1 CURRENT POSITION XYZ = [  8.2935 , -1.1447 , -0.7609 ] 
-2 CURRENT POSITION XYZ = [  8.2524 , -1.1444 , -0.7667 ] 
-3 CURRENT POSITION XYZ = [  8.2205 , -1.1431 , -0.7747 ] 
-4 CURRENT POSITION XYZ = [  8.1920 , -1.1421 , -0.7737 ] 
-5 CURRENT POSITION XYZ = [  8.1920 , -1.1421 , -0.7737 ] 
-6 CURRENT POSITION XYZ = [  8.1539 , -1.1414 , -0.7847 ] 
-7 CURRENT POSITION XYZ = [  8.1522 , -1.1417 , -0.7820 ] 
+POSITION SETPOINT XYZ = [ 0.0145 , 0.0254 , -5.0009 ] 
+POSITION SETPOINT YAW = 0.5016 
+POSITION SETPOINT XYZ = [ 3.0145 , 4.0254 , -5.0009 ] 
+
+0 CURRENT POSITION XYZ = [  0.0167 ,  0.0232 , -0.0002 ] 
+1 CURRENT POSITION XYZ = [  0.0167 ,  0.0232 , -0.0002 ] 
+2 CURRENT POSITION XYZ = [  0.0167 ,  0.0232 , -0.0002 ] 
+3 CURRENT POSITION XYZ = [  0.2366 ,  0.4232 , -4.9290 ] 
+4 CURRENT POSITION XYZ = [  2.5259 ,  3.4877 , -4.9987 ] 
+5 CURRENT POSITION XYZ = [  3.2521 ,  4.3785 , -5.0051 ] 
+6 CURRENT POSITION XYZ = [  3.3595 ,  4.4910 , -4.9979 ] 
+7 CURRENT POSITION XYZ = [  2.8426 ,  3.8541 , -4.9823 ] 
+8 CURRENT POSITION XYZ = [  2.7094 ,  3.6664 , -4.9793 ] 
+9 CURRENT POSITION XYZ = [  2.9432 ,  3.9022 , -4.9902 ] 
+...
+100 CURRENT POSITION XYZ = [  2.9877 ,  4.0419 , -5.0041 ] 
+101 CURRENT POSITION XYZ = [  3.0007 ,  4.0452 , -5.0043 ] 
+102 CURRENT POSITION XYZ = [  3.0007 ,  4.0452 , -5.0043 ] 
+103 CURRENT POSITION XYZ = [  3.0327 ,  4.0602 , -5.0009 ] 
+104 CURRENT POSITION XYZ = [  3.0346 ,  4.0493 , -5.0008 ] 
+105 CURRENT POSITION XYZ = [  3.0282 ,  4.0298 , -5.0028 ] 
 
 DISABLE OFFBOARD MODE
 
+DISARM MODE
+
 READ SOME MESSAGES 
 Got message LOCAL_POSITION_NED (spec: https://pixhawk.ethz.ch/mavlink/#LOCAL_POSITION_NED)
-    pos  (NED):  8.152975 -1.141093 -0.784075 (m)
+    pos  (NED):  3.024098 4.019777 -5.005819 (m)
 Got message HIGHRES_IMU (spec: https://pixhawk.ethz.ch/mavlink/#HIGHRES_IMU)
-    ap time:     3611390110 
-    acc  (NED):   0.005503  0.044659 -9.740363 (m/s^2)
-    gyro (NED):  -0.003064  0.003857  0.000005 (rad/s)
-    mag  (NED):  -0.117767 -0.335362 -0.253204 (Ga)
-    baro:        1020.519958 (mBar) 
-    altitude:    -60.341393 (m) 
-    temperature: 46.779999 C 
+    ap time:     195455939 
+    acc  (NED):   0.014750 -0.040604 -9.708628 (m/s^2)
+    gyro (NED):   0.007212  0.076203  0.002922 (rad/s)
+    mag  (NED):   0.812265 -0.406478  1.780328 (Ga)
+    baro:        0.000000 (mBar) 
+    altitude:    493.015381 (m) 
+    temperature: 0.000000 C 
 
 CLOSE THREADS
 
 CLOSE PORT
+
 ```
 
-Exploration
+4. Exploration
 ===========
 
 There are a few things to explore past this example.
 
-First you can connect via a Telemetry Radio on Telem 1 or 2, or via an FTDI on Telem 2 or Serial 4 
-(https://pixhawk.org/dev/wiring).  Note: Serial 5's receive pin is occupied by a second NuttX shell and can't be used to receive data without reconfiguration.
+For steps 2 and 3 from the above tutorial, you'll use a different port.  
+On the off-board computer side, the port might now be ```/dev/ttyUSB0```.  
 
-With this you'll be able to start a second port for communcation, and leave the USB port available for viewing prints in the NuttX shell.  
-
-For steps 2 and 3 from the above tutorial, you'll use a different port.  On the off-board computer side, the port might now be ```/dev/ttyUSB0```.  On the Pixhawk side, here the port mappings are in the table below.
-
-| PX4 UART | NuttX UART |
-|----------|------------|
-| Telem 1  | /dev/ttyS1 |
-| Telem 2  | /dev/ttyS2 |
-| Serial 4 | /dev/ttyS6 |
-
-Now add a print statement in the Pixhawk Firmware to see received messages.  Build and upload this to Pixhawk.
+Now add a print statement in the Pixhawk Firmware to see received messages.  
+Build and upload this to Pixhawk.
 
 ```
 [Firmware/src/modules/mavlink/mavlink_receiver.cpp : line 1351]
@@ -160,9 +120,8 @@ for (ssize_t i = 0; i < nread; i++) {
 		handle_message(&msg);
 ```
 
-Screen into the NuttX shell and start a mavlink session like in the example above.  
-
-On the off-board side, in another terminal run the ```c_uart_interface_example``` executable. You should see output in the NuttX shell similar to this:
+On the off-board side, in another terminal run the ```px4_offboard_interface``` executable. 
+You should see output in the NuttX shell similar to this:
 
 ```
 HANDLE MESSAGE
