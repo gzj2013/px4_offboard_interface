@@ -178,7 +178,6 @@ open_serial()
 	// --------------------------------------------------------------------------
 	//   OPEN PORT
 	// --------------------------------------------------------------------------
-	printf("OPEN PORT\n");
 
 	fd = _open_port(uart_name);
 
@@ -188,6 +187,7 @@ open_serial()
 		printf("failure, could not open port.\n");
 		throw EXIT_FAILURE;
 	}
+	printf("\nOpen port %s successful!\n",uart_name);
 
 	// --------------------------------------------------------------------------
 	//   SETUP PORT
@@ -204,14 +204,14 @@ open_serial()
 	}
 	if (fd <= 0)
 	{
-		printf("Connection attempt to port %s with %d baud, 8N1 failed, exiting.\n", uart_name, baudrate);
+		printf("Connection attempt to %s with %d-8N1 failed, exiting...\n", uart_name, baudrate);
 		throw EXIT_FAILURE;
 	}
 
 	// --------------------------------------------------------------------------
 	//   CONNECTED!
 	// --------------------------------------------------------------------------
-	printf("Connected to %s with %d baud, 8 data bits, no parity, 1 stop bit (8N1)\n", uart_name, baudrate);
+	printf("Connected to %s with %d-8N1\n", uart_name, baudrate);
 	lastStatus.packet_rx_drop_count = 0;
 
 	status = true;

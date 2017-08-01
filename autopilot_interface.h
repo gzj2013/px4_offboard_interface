@@ -69,6 +69,69 @@
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_RATE     0b0000010111111111
 
 
+/**
+ * Definations for mavlink_set_attitude_target_t's member of type_mask
+
+< Mappings: If any of these bits are set, the corresponding input should be ignored: 
+	bit 1: body roll rate, bit 2: body pitch rate, bit 3: body yaw rate. bit 4-bit 6: reserved, 
+	bit 7: throttle, bit 8: attitude
+
+ */
+
+// #define MAVLINK_MSG_SET_ATTITUDE_TARGET_THROTTLE     0b00111000
+#define MAVLINK_MSG_SET_ATTITUDE_TARGET_ATTITUDE     0b01111111
+
+
+
+/*
+ Bitmask to indicate which dimensions should be ignored by the vehicle: 
+	 a value of 0b0000000000000000 or 0b0000001000000000 indicates 
+	 that none of the setpoint dimensions should be ignored. 
+	 If bit 10 is set the floats afx afy afz should be interpreted as `force` instead of `acceleration`. 
+	 Mapping: bit 1: x, bit 2: y, bit 3: z, bit 4: vx, bit 5: vy, bit 6: vz, bit 7: ax, bit 8: ay, bit 9: az, 
+	 bit 10: is force setpoint, bit 11: yaw, bit 12: yaw rate
+
+typedef struct __mavlink_set_position_target_local_ned_t
+{
+ uint32_t time_boot_ms; ///< Timestamp in milliseconds since system boot
+ float x; ///< X Position in NED frame in meters
+ float y; ///< Y Position in NED frame in meters
+ float z; ///< Z Position in NED frame in meters (note, altitude is negative in NED)
+ float vx; ///< X velocity in NED frame in meter / s
+ float vy; ///< Y velocity in NED frame in meter / s
+ float vz; ///< Z velocity in NED frame in meter / s
+ float afx; ///< X acceleration or force (if bit 10 of type_mask is set) in NED frame in meter / s^2 or N
+ float afy; ///< Y acceleration or force (if bit 10 of type_mask is set) in NED frame in meter / s^2 or N
+ float afz; ///< Z acceleration or force (if bit 10 of type_mask is set) in NED frame in meter / s^2 or N
+ float yaw; ///< yaw setpoint in rad
+ float yaw_rate; ///< yaw rate setpoint in rad/s
+ uint16_t type_mask; ///< Bitmask to indicate which dimensions should be ignored by the vehicle: a value of 0b0000000000000000 or 0b0000001000000000 indicates that none of the setpoint dimensions should be ignored. If bit 10 is set the floats afx afy afz should be interpreted as force instead of acceleration. Mapping: bit 1: x, bit 2: y, bit 3: z, bit 4: vx, bit 5: vy, bit 6: vz, bit 7: ax, bit 8: ay, bit 9: az, bit 10: is force setpoint, bit 11: yaw, bit 12: yaw rate
+ uint8_t target_system; ///< System ID
+ uint8_t target_component; ///< Component ID
+ uint8_t coordinate_frame; ///< Valid options are: MAV_FRAME_LOCAL_NED = 1, MAV_FRAME_LOCAL_OFFSET_NED = 7, MAV_FRAME_BODY_NED = 8, MAV_FRAME_BODY_OFFSET_NED = 9
+} mavlink_set_position_target_local_ned_t;
+
+
+< Mappings: If any of these bits are set, the corresponding input should be ignored: 
+	bit 1: body roll rate, bit 2: body pitch rate, bit 3: body yaw rate. bit 4-bit 6: reserved, 
+	bit 7: throttle, bit 8: attitude
+
+typedef struct __mavlink_set_attitude_target_t
+{
+ uint32_t time_boot_ms; ///< Timestamp in milliseconds since system boot
+ float q[4]; ///< Attitude quaternion (w, x, y, z order, zero-rotation is 1, 0, 0, 0)
+ float body_roll_rate; ///< Body roll rate in radians per second
+ float body_pitch_rate; ///< Body roll rate in radians per second
+ float body_yaw_rate; ///< Body roll rate in radians per second
+ float thrust; ///< Collective thrust, normalized to 0 .. 1 (-1 .. 1 for vehicles capable of reverse trust)
+ uint8_t target_system; ///< System ID
+ uint8_t target_component; ///< Component ID
+ uint8_t type_mask; ///< Mappings: If any of these bits are set, the corresponding input should be ignored: bit 1: body roll rate, bit 2: body pitch rate, bit 3: body yaw rate. bit 4-bit 6: reserved, bit 7: throttle, bit 8: attitude
+} mavlink_set_attitude_target_t;
+
+*/
+
+
 // ------------------------------------------------------------------------------
 //   Prototypes
 // ------------------------------------------------------------------------------
@@ -107,6 +170,7 @@ struct Time_Stamps
 	uint64_t position_target_global_int;
 	uint64_t highres_imu;
 	uint64_t attitude;
+	uint64_t vfr_hud;
 
 	void
 	reset_timestamps()
@@ -121,6 +185,7 @@ struct Time_Stamps
 		position_target_global_int = 0;
 		highres_imu = 0;
 		attitude = 0;
+		vfr_hud = 0;
 	}
 
 };
@@ -162,6 +227,9 @@ struct Mavlink_Messages {
 
 	// Attitude
 	mavlink_attitude_t attitude;
+
+	// VFR_HUD
+	mavlink_vfr_hud_t vfr_hud;
 
 	// System Parameters?
 
@@ -220,11 +288,14 @@ public:
 	void read_messages();
 	int  write_message(mavlink_message_t message);
 
+
 	void enable_offboard_control();
 	void disable_offboard_control();
+	bool is_in_offboard_mode();
 
 	void vehicle_armed();
 	void vehicle_disarm();
+	bool is_armed();
 
 	void start();
 	void stop();
@@ -234,6 +305,7 @@ public:
 
 	void handle_quit( int sig );
 
+	void write_set_att();
 
 private:
 

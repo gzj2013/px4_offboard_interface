@@ -11,7 +11,7 @@ build/
 # build
 *.o
 *.d
-mavlink_control
+px4_offboard_control
 
 # mac
 .DS_Store
