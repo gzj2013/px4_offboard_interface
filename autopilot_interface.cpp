@@ -521,18 +521,19 @@ enable_offboard_control()
 
         // Sends the command to go off-board
         while(enable_trytimes--){
+            if (is_in_offboard_mode()){
+                control_status = true;   /* In offboard mode*/
+                break;
+            }
+            
             success = toggle_offboard_control( true );
             if(success < 0){
 
                 printf("Offboard Command Send failed!\n");
                 throw EXIT_FAILURE;
             }
-            usleep(200000);
+            usleep(500000);
 
-            if (is_in_offboard_mode()){
-                control_status = true;   /* In offboard mode*/
-                break;
-            }
         }
 
         if(!control_status){
@@ -599,6 +600,11 @@ vehicle_armed()
     
     while(armed_trytimes--){
 
+        if (is_armed()){
+            armed = true;
+            break;
+        }
+
         success = toggle_arm_disarm( true );
          if(success < 0){
 
@@ -608,10 +614,6 @@ vehicle_armed()
 
         usleep(200000);
 
-        if (is_armed()){
-            armed = true;
-            break;
-        }
     }
 
     if(!armed){
