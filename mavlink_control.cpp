@@ -163,6 +163,8 @@ commands(Autopilot_Interface &api)
         }
         
         printf("Vehicle is armed! Now switch to offboard mode...\n");
+        sleep(5);
+
         api.enable_offboard_control();
 
         usleep(100); // give some time to let it sink in
@@ -217,17 +219,17 @@ commands(Autopilot_Interface &api)
                 sp        );
     
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
-    set_position( ip.x, ip.y, ip.z - 7, sp);
+    set_position( ip.x, ip.y, ip.z - 1, sp);
     api.update_setpoint(sp);  // THEN pixhawk will try to move
-    sleep(15);
-    set_position( ip.x, ip.y+4, ip.z -7, sp);
-    api.update_setpoint(sp);  // THEN pixhawk will try to move
-    sleep(14);
-    set_position( ip.x-2, ip.y+4, ip.z-7, sp);
-    api.update_setpoint(sp);  // THEN pixhawk will try to move
-    sleep(14);
-    set_position( ip.x-2, ip.y+4, ip.z -3, sp);
-    api.update_setpoint(sp);  // THEN pixhawk will try to move
+    // sleep(15);
+    // set_position( ip.x, ip.y+4, ip.z -7, sp);
+    // api.update_setpoint(sp);  // THEN pixhawk will try to move
+    // sleep(14);
+    // set_position( ip.x-2, ip.y+4, ip.z-7, sp);
+    // api.update_setpoint(sp);  // THEN pixhawk will try to move
+    // sleep(14);
+    // set_position( ip.x-2, ip.y+4, ip.z -3, sp);
+    // api.update_setpoint(sp);  // THEN pixhawk will try to move
 
     // Check position
     for (int i=0; i < 11000; i++) // Wait for 8 seconds, 
