@@ -231,6 +231,7 @@ commands(Autopilot_Interface &api)
     // api.update_setpoint(sp);  // THEN pixhawk will try to move
 
     // Check position
+    int land = 0;
     for (int i=0; i < 100; i++) // Wait for 8 seconds, 
     // while(1)
     {
@@ -239,6 +240,11 @@ commands(Autopilot_Interface &api)
         printf("Current Position = [ % .4f , % .4f , % .4f ] \n", pos.x, pos.y, pos.z);
         if( pos.z- (ip.z - 1) <  0.2){
             sleep(10);
+            land = 1;
+        }
+
+        if(land){
+            
             set_position( ip.x, ip.y, ip.z, sp);
             api.update_setpoint(sp);  // THEN pixhawk will try to move
         }
