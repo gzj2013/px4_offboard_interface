@@ -221,10 +221,10 @@ commands(Autopilot_Interface &api)
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
     set_position( ip.x, ip.y, ip.z - 1, sp);
     api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // sleep(15);
-    // set_position( ip.x, ip.y+4, ip.z -7, sp);
-    // api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // sleep(14);
+    sleep(50);
+    set_position( ip.x, ip.y, ip.z, sp);
+    api.update_setpoint(sp);  // THEN pixhawk will try to move
+    sleep(50);
     // set_position( ip.x-2, ip.y+4, ip.z-7, sp);
     // api.update_setpoint(sp);  // THEN pixhawk will try to move
     // sleep(14);
@@ -232,7 +232,7 @@ commands(Autopilot_Interface &api)
     // api.update_setpoint(sp);  // THEN pixhawk will try to move
 
     // Check position
-    for (int i=0; i < 11000; i++) // Wait for 8 seconds, 
+    for (int i=0; i < 100; i++) // Wait for 8 seconds, 
     // while(1)
     {
 
