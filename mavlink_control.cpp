@@ -239,19 +239,20 @@ commands(Autopilot_Interface &api)
         mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
         printf("Current Position = [ % .4f , % .4f , % .4f ] \n", pos.x, pos.y, pos.z);
         if( pos.z- (ip.z - 1) <  0.2){
+            printf("On positon\n");
             sleep(10);
             land = 1;
         }
 
-        if(land){
+        // if(land){
             
-            set_position( ip.x, ip.y, ip.z, sp);
-            api.update_setpoint(sp);  // THEN pixhawk will try to move
-        }
+        //     set_position( ip.x, ip.y, ip.z, sp);
+        //     api.update_setpoint(sp);  // THEN pixhawk will try to move
+        // }
 
-         if( pos.z- ip.z  <  0.2){
-                goto error;
-         }
+        //  if( pos.z- ip.z  <  0.2){
+        //         goto error;
+        //  }
 
         sleep(1);
     }
