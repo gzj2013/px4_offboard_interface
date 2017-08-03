@@ -229,7 +229,7 @@ is_in_offboard_mode()
     mode = heartbeat.custom_mode;
     custom_mode = *(px4_custom_mode*)(&mode);
 
-    // printf("Check OFFBOARD MODE, %d\n", custom_mode.main_mode);
+    printf("Check OFFBOARD MODE, %d\n", custom_mode.main_mode);
 
     if (custom_mode.main_mode == PX4_CUSTOM_MAIN_MODE_OFFBOARD)
         return true;
@@ -275,7 +275,7 @@ read_messages()
 
                 case MAVLINK_MSG_ID_HEARTBEAT:
                 {
-                    // printf("MAVLINK_MSG_ID_HEARTBEAT\n");
+                    //printf("MAVLINK_MSG_ID_HEARTBEAT\n");
                     mavlink_msg_heartbeat_decode(&message, &(current_messages.heartbeat));
                     current_messages.time_stamps.heartbeat = get_time_usec();
                     this_timestamps.heartbeat = current_messages.time_stamps.heartbeat;
@@ -365,7 +365,7 @@ read_messages()
 
                 case MAVLINK_MSG_ID_VFR_HUD:
                 {
-                    printf("MAVLINK_MSG_ID_VFR_HUD, alt=%6.2f\n", current_messages.vfr_hud.alt);
+                    //printf("MAVLINK_MSG_ID_VFR_HUD, alt=%6.2f\n", current_messages.vfr_hud.alt);
                     mavlink_msg_vfr_hud_decode(&message, &(current_messages.vfr_hud));
                     current_messages.time_stamps.vfr_hud = get_time_usec();
                     this_timestamps.vfr_hud = current_messages.time_stamps.vfr_hud;
@@ -509,7 +509,7 @@ void
 Autopilot_Interface::
 enable_offboard_control()
 {
-    int enable_trytimes = 20;
+    int enable_trytimes = 30;
     
     // Should only send this command once
     if ( control_status == false )
@@ -521,10 +521,6 @@ enable_offboard_control()
 
         // Sends the command to go off-board
         while(enable_trytimes--){
-            if (is_in_offboard_mode()){
-                control_status = true;   /* In offboard mode*/
-                break;
-            }
             
             success = toggle_offboard_control( true );
             if(success < 0){
@@ -532,7 +528,21 @@ enable_offboard_control()
                 printf("Offboard Command Send failed!\n");
                 throw EXIT_FAILURE;
             }
-            usleep(500000);
+
+            usleep(400000);
+
+            // success = toggle_offboard_control( true );
+            // if(success < 0){
+
+            //     printf("Offboard Command Send failed!\n");
+            //     throw EXIT_FAILURE;
+            // }
+             // usleep(300000);
+
+            if (is_in_offboard_mode()){
+                control_status = true;   /* In offboard mode*/
+                break;
+            }
 
         }
 
@@ -595,7 +605,7 @@ vehicle_armed()
     printf("Switch Vehicle to Armed...\n");
 
     // Sends the command to armed
-    int success  = -1, armed_trytimes = 5;
+    int success  = -1, armed_trytimes = 15;
     bool armed = false;
     
     while(armed_trytimes--){

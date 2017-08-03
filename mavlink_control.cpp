@@ -219,7 +219,7 @@ commands(Autopilot_Interface &api)
     //             sp        );
     
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
-    set_position( ip.x, ip.y, ip.z - 1, sp);
+    set_position( ip.x, ip.y, ip.z - 2, sp);
     api.update_setpoint(sp);  // THEN pixhawk will try to move
     // set_position( ip.x, ip.y, ip.z, sp);
     // api.update_setpoint(sp);  // THEN pixhawk will try to move
@@ -232,27 +232,23 @@ commands(Autopilot_Interface &api)
 
     // Check position
     int land = 0;
-    for (int i=0; i < 100; i++) // Wait for 8 seconds, 
-    // while(1)
+    // for (int i=0; i < 40; i++) // Wait for 8 seconds, 
+    while(1)
     {
 
         mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
         printf("Current Position = [ % .4f , % .4f , % .4f ] \n", pos.x, pos.y, pos.z);
-        if( pos.z- (ip.z - 1) <  0.2){
-            printf("On positon\n");
-            sleep(10);
+        if( pos.z- (ip.z - 1) <  0.1){
+            printf("On positon...\n");
             land = 1;
         }
 
-        // if(land){
-            
-        //     set_position( ip.x, ip.y, ip.z, sp);
-        //     api.update_setpoint(sp);  // THEN pixhawk will try to move
-        // }
-
-        //  if( pos.z- ip.z  <  0.2){
-        //         goto error;
-        //  }
+        if(land){
+            set_position( ip.x, ip.y, ip.z, sp);
+            api.update_setpoint(sp);  // THEN pixhawk will try to move
+            printf("Return to land...\n");
+            sleep(10);
+        }
 
         sleep(1);
     }
