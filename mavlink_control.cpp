@@ -187,11 +187,13 @@ commands(Autopilot_Interface &api)
          *       This is used in automatic take-off situation
         */
 
-        //   ARMED
-        api.vehicle_armed();
-
         //   START OFFBOARD MODE
         api.enable_offboard_control();
+        printf("######## Offboard Mode ########## !\n");
+
+        //   ARMED
+        api.vehicle_armed();
+        printf("######## Armed ########## !\n");
 
         usleep(100); // give some time to let it sink in
     }/*End: switch to Offboard mode*/
@@ -216,12 +218,12 @@ commands(Autopilot_Interface &api)
     printf("SEND OFFBOARD COMMANDS\n");
 
     // Example 1 - Set Velocity
-    // set_velocity( 1      , // [m/s]
-    //                         1       , // [m/s]
-    //                         1       , // [m/s]
-    //                         sp        );
-    // api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // sleep(2);
+    set_velocity( 0.15     , // [m/s]
+                            0.15      , // [m/s]
+                            0.15     , // [m/s]
+                            sp        );
+    api.update_setpoint(sp);  // THEN pixhawk will try to move
+    sleep(3);
 
     // // Example 2 - Set Position
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
@@ -243,6 +245,7 @@ commands(Autopilot_Interface &api)
     int on_z_position = 0;
     int loop_cnt = 0;
     int i = 10;
+    int land_delay = 14;
     while(1)
     {
         loop_cnt++;
@@ -321,11 +324,22 @@ commands(Autopilot_Interface &api)
         set_position( ip.x+10, ip.y+8, ip.z - 2.5, sp);
         api.update_setpoint(sp);  // THEN pixhawk will try to move
         printf("Misson done....\n");
+       
         while(1){
+            land_delay--;
             sleep(1);
             pos = api.current_messages.local_position_ned;
             printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
                 distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
+
+            if(!land_delay) {
+                printf("land...\n");
+                // set_land(sp);
+                // api.update_setpoint(sp); 
+                // api.toggle_land_control(true);
+                api.toggle_return_control(true);
+             }   
+
         }
 
 #endif

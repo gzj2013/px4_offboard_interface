@@ -558,12 +558,12 @@ void
 Autopilot_Interface::
 enable_offboard_control()
 {
-    int enable_trytimes = 30;
+    int enable_trytimes = 50;
     
     // Should only send this command once
     if ( control_status == false )
     {
-        printf("ENABLE OFFBOARD MODE\n");
+        printf("Enable Offboaed Mode...\n");
 
         //   Toggle Offboard Mode
         int success = -1;
@@ -727,6 +727,52 @@ toggle_offboard_control( bool flag )
     com.target_system    = system_id;
     com.target_component = autopilot_id;
     com.command          = MAV_CMD_NAV_GUIDED_ENABLE;
+    com.confirmation     = true;
+    com.param1           = (float) flag; // flag >0.5 => start, <0.5 => stop
+
+    // Encode
+    mavlink_message_t message;
+    mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+    // Send the message
+    int len = serial_port->write_message(message);
+
+    // Done!
+    return len;
+}
+
+int
+Autopilot_Interface::
+toggle_land_control( bool flag )
+{
+    // Prepare command for off-board mode
+    mavlink_command_long_t com = { 0 };
+    com.target_system    = system_id;
+    com.target_component = autopilot_id;
+    com.command          = MAV_CMD_NAV_LAND;
+    com.confirmation     = true;
+    com.param1           = (float) flag; // flag >0.5 => start, <0.5 => stop
+
+    // Encode
+    mavlink_message_t message;
+    mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+    // Send the message
+    int len = serial_port->write_message(message);
+
+    // Done!
+    return len;
+}
+
+int
+Autopilot_Interface::
+toggle_return_control( bool flag )
+{
+    // Prepare command for off-board mode
+    mavlink_command_long_t com = { 0 };
+    com.target_system    = system_id;
+    com.target_component = autopilot_id;
+    com.command          = MAV_CMD_NAV_RETURN_TO_LAUNCH;
     com.confirmation     = true;
     com.param1           = (float) flag; // flag >0.5 => start, <0.5 => stop
 

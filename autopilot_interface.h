@@ -301,6 +301,8 @@ public:
 	char get_setpoint_sendstatus();
 	void set_setpoint_sendstatus(char status);
 
+	int toggle_land_control( bool flag );
+	int toggle_return_control( bool flag );
 	void vehicle_armed();
 	void vehicle_disarm();
 	bool is_armed();
