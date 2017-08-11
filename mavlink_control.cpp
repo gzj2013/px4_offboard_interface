@@ -218,12 +218,12 @@ commands(Autopilot_Interface &api)
     printf("SEND OFFBOARD COMMANDS\n");
 
     // Example 1 - Set Velocity
-    set_velocity( 0.55     , // [m/s]
-                            0.55      , // [m/s]
-                            0.55     , // [m/s]
+    set_velocity( 0.15     , // [m/s]
+                            0.15      , // [m/s]
+                            0.15     , // [m/s]
                             sp        );
     api.update_setpoint(sp);  // THEN pixhawk will try to move
-    sleep(3);
+    // sleep(3);
 
     // // Example 2 - Set Position
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;

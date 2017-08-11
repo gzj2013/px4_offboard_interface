@@ -654,7 +654,7 @@ vehicle_armed()
     printf("Switch Vehicle to Armed...\n");
 
     // Sends the command to armed
-    int success  = -1, armed_trytimes = 15;
+    int success  = -1, armed_trytimes = 50;
     bool armed = false;
     
     while(armed_trytimes--){
