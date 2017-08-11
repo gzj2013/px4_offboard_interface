@@ -218,9 +218,9 @@ commands(Autopilot_Interface &api)
     printf("SEND OFFBOARD COMMANDS\n");
 
     // Example 1 - Set Velocity
-    set_velocity( 0.15     , // [m/s]
-                            0.15      , // [m/s]
-                            0.15     , // [m/s]
+    set_velocity( 0.55     , // [m/s]
+                            0.55      , // [m/s]
+                            0.55     , // [m/s]
                             sp        );
     api.update_setpoint(sp);  // THEN pixhawk will try to move
     sleep(3);
