@@ -62,10 +62,12 @@
 
                                                 // bit number  876543210987654321
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_POSITION     0b0000110111111000
+#define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_POSITION_VELOCITY      0b0000110111000000
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY     0b0000110111000111
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_ACCELERATION 0b0000110000111111
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_FORCE        0b0000111000111111
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_ANGLE    0b0000100111111111
+#define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_RATE     0b0000010111111111
 #define MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_YAW_RATE     0b0000010111111111
 
 
@@ -140,10 +142,13 @@ typedef struct __mavlink_set_attitude_target_t
 // helper functions
 uint64_t get_time_usec();
 void set_position(float x, float y, float z, mavlink_set_position_target_local_ned_t &sp);
+void set_position_velocity(float x, float y, float z, float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp);
 void set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp);
 void set_acceleration(float ax, float ay, float az, mavlink_set_position_target_local_ned_t &sp);
 void set_yaw(float yaw, mavlink_set_position_target_local_ned_t &sp);
 void set_yaw_rate(float yaw_rate, mavlink_set_position_target_local_ned_t &sp);
+void set_land( mavlink_set_position_target_local_ned_t &sp);
+// void set_land_vel(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp);
 
 void* start_autopilot_interface_read_thread(void *args);
 void* start_autopilot_interface_write_thread(void *args);
@@ -275,9 +280,10 @@ public:
 	char reading_status;
 	char writing_status;
 	char control_status;
-    uint64_t write_count;
+	char setpoint_send_status;
+	uint64_t write_count;
 
-    int system_id;
+    	int system_id;
 	int autopilot_id;
 	int companion_id;
 
@@ -292,6 +298,8 @@ public:
 	void enable_offboard_control();
 	void disable_offboard_control();
 	bool is_in_offboard_mode();
+	char get_setpoint_sendstatus();
+	void set_setpoint_sendstatus(char status);
 
 	void vehicle_armed();
 	void vehicle_disarm();
@@ -326,8 +334,6 @@ private:
 	void write_setpoint();
 
 };
-
-
 
 #endif // AUTOPILOT_INTERFACE_H_
 

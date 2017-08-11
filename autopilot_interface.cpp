@@ -58,6 +58,15 @@ set_position(float x, float y, float z, mavlink_set_position_target_local_ned_t 
 
 }
 
+void
+set_land(mavlink_set_position_target_local_ned_t &sp)
+{
+    sp.time_boot_ms = (uint32_t) (get_time_usec()/1000);
+
+    sp.type_mask = 0x2000;  // 0b10 0000 0000 0000
+    printf("land cmd send...\n");
+}
+
 /*
  * Set target local ned velocity
  *
@@ -65,9 +74,28 @@ set_position(float x, float y, float z, mavlink_set_position_target_local_ned_t 
  * velocities in the Local NED frame, in meters per second.
  */
 void
-set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp)
+set_position_velocity(float x, float y, float z, float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp)
 {
     sp.type_mask =
+        MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY     ;
+
+    sp.coordinate_frame = MAV_FRAME_LOCAL_NED;
+
+    sp.x   = x;
+    sp.y   = y;
+    sp.z   = z;
+
+    sp.vx  = vx;
+    sp.vy  = vy;
+    sp.vz  = vz;
+
+    //printf("VELOCITY SETPOINT UVW = [ %.4f , %.4f , %.4f ] \n", sp.vx, sp.vy, sp.vz);
+}
+
+void
+set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp)
+{
+    sp.type_mask |=
         MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY     ;
 
     sp.coordinate_frame = MAV_FRAME_LOCAL_NED;
@@ -158,6 +186,7 @@ Autopilot_Interface(Serial_Port *serial_port_)
     reading_status = 0;      // whether the read thread is running
     writing_status = 0;      // whether the write thread is running
     control_status = 0;      // whether the autopilot is in offboard control mode
+    setpoint_send_status = 0;      // whether the autopilot has recieved the  setpoint
     time_to_exit   = false;  // flag to signal thread exit
 
     read_tid  = 0; // read thread id
@@ -187,7 +216,26 @@ Autopilot_Interface::
 update_setpoint(mavlink_set_position_target_local_ned_t setpoint)
 {
     current_setpoint = setpoint;
+
+    set_setpoint_sendstatus(true);
 }
+
+char
+Autopilot_Interface::
+get_setpoint_sendstatus()
+{
+    return setpoint_send_status;
+}
+
+void
+Autopilot_Interface::
+set_setpoint_sendstatus(char status)
+{
+    setpoint_send_status = status;
+}
+
+
+
 
 // ------------------------------------------------------------------------------
 //  Check Vehicle's Armed State
@@ -311,9 +359,10 @@ read_messages()
 
                 case MAVLINK_MSG_ID_LOCAL_POSITION_NED:
                 {
-                    //printf("MAVLINK_MSG_ID_LOCAL_POSITION_NED\n");
+                    // printf("MAVLINK_MSG_ID_LOCAL_POSITION_NED\n");
                     mavlink_msg_local_position_ned_decode(&message, &(current_messages.local_position_ned));
                     current_messages.time_stamps.local_position_ned = get_time_usec();
+                    // printf("% .4f,% .4f,% .4f\n",  current_messages.local_position_ned.x, current_messages.local_position_ned.y, current_messages.local_position_ned.z);
                     this_timestamps.local_position_ned = current_messages.time_stamps.local_position_ned;
                     break;
                 }
@@ -475,7 +524,7 @@ write_set_att()
 
     mavlink_set_attitude_target_t att_sp/* = attitude_setpoint*/;
 
-    if ( not att_sp.time_boot_ms )
+    // if ( not att_sp.time_boot_ms )
      att_sp.time_boot_ms = (uint32_t) (get_time_usec()/1000);
     
     att_sp.target_system    = system_id;
@@ -486,7 +535,7 @@ write_set_att()
     // att_sp.q[2] = 0;
     // att_sp.q[3] = -0.707;
     // mavlink_euler_to_quaternion(float roll, float pitch, float yaw, float quaternion[4]);
-    mavlink_euler_to_quaternion(0.523, 0, 0, &att_sp.q[0]);  /*1.571*/
+    mavlink_euler_to_quaternion(0, 0, 1.571, &att_sp.q[0]);  /*1.571*/
     // mavlink_quaternion_to_euler(set_attitude_target.q,
     //                                     &_att_sp.roll_body, &_att_sp.pitch_body, &_att_sp.yaw_body);
 
@@ -992,9 +1041,9 @@ write_thread(void)
     int cnt = 0;
     while ( !time_to_exit )
     {
-        usleep(100000);   // Stream at 10Hz, need to > 2Hz
         write_setpoint();
-
+        usleep(200000);   // Stream at 10Hz, need to > 2Hz
+        
         // cnt++;
         // if(cnt % 5 == 0){
         //     printf("set att...\n");

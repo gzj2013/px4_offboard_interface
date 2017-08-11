@@ -14,6 +14,7 @@
 
 #include "mavlink_control.h"
 #include "px4_custom_mode.h"
+#include <math.h>
 
 enum takeoff_mode{
     TAKE_OFF_AUTOMATIC,
@@ -129,6 +130,14 @@ top (int argc, char **argv)
 
 }
 
+float distance(float x1,float y1,float z1,float x2,float y2,float z2)
+{
+    float x, y,z;
+    x = (x1-x2) * (x1-x2);
+    y = (y1-y2) * (y1-y2);
+    z = (z1-z2) * (z1-z2);
+    return sqrt(x+y+z);
+}
 
 // ------------------------------------------------------------------------------
 //   COMMANDS
@@ -183,72 +192,143 @@ commands(Autopilot_Interface &api)
 
         //   START OFFBOARD MODE
         api.enable_offboard_control();
-        if (!api.is_in_offboard_mode()){
-             printf("Enable offboard mode failed!\n");
-             throw EXIT_FAILURE;
-        }
+
         usleep(100); // give some time to let it sink in
     }/*End: switch to Offboard mode*/
 
     /** 
     * Now the autopilot is waiting for accepting setpoint commands
     */
+    int interval = 0;
+    int waiting_interval = 0;
+    printf("Waiting for 1 minute %2ds", waiting_interval);
+    fflush(stdout);
+
+    for(interval = waiting_interval; interval > 0; interval--){
+        sleep(1);
+        printf("\b\b\b%2ds", interval);
+
+        fflush(stdout);
+        
+    }
+    printf("\n");
+
     printf("SEND OFFBOARD COMMANDS\n");
 
     // Example 1 - Set Velocity
+    // set_velocity( 1      , // [m/s]
+    //                         1       , // [m/s]
+    //                         1       , // [m/s]
+    //                         sp        );
+    // api.update_setpoint(sp);  // THEN pixhawk will try to move
+    // sleep(2);
 
     // // Example 2 - Set Position
-    //  set_position( ip.x , // [m]
-    //             ip.y, // [m]
-    //             ip.z + 2.0 , // [m]
-    //             sp         );
-
-
-    // // Example 1.2 - Append Yaw Command
-    // set_yaw( ip.yaw + 1.57 , // [rad]-[90 dgree] 
-    //            sp    );
-
-    // // SEND THE COMMAND
-    // api.update_setpoint(sp);
-
-    // sleep(3);
-
-    // set_velocity( -0.1       , // [m/s]
-    //            -0.1       , // [m/s]
-    //             0.1       , // [m/s]
-    //             sp        );
-    
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
-    set_position( ip.x, ip.y, ip.z - 2, sp);
+    // set_position_velocity( 0.01, 0.01, 0.01, ip.x, ip.y, ip.z - 2.5, sp);
+    set_position( ip.x, ip.y, ip.z - 2.5, sp);
     api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // set_position( ip.x, ip.y, ip.z, sp);
-    // api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // sleep(0);
-    // set_position( ip.x-2, ip.y+4, ip.z-7, sp);
-    // api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // sleep(14);
-    // set_position( ip.x-2, ip.y+4, ip.z -3, sp);
-    // api.update_setpoint(sp);  // THEN pixhawk will try to move
+    sleep(1);
+    // set_yaw( ip.yaw + 1.57 /*[rad]-[90 dgree]*/, sp  );
+    // set_velocity( 0.01       , // [m/s]
+    //                         0.01       , // [m/s]
+    //                         0.01       , // [m/s]
+    //                         sp        );
 
     // Check position
     int land = 0;
-    // for (int i=0; i < 40; i++) // Wait for 8 seconds, 
+    int setpoint = 1;
+    int on_x_position = 0;
+    int on_y_position = 0;
+    int on_z_position = 0;
+    int loop_cnt = 0;
+    int i = 10;
     while(1)
     {
+        loop_cnt++;
 
         mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
-        printf("Current Position = [ % .4f , % .4f , % .4f ] \n", pos.x, pos.y, pos.z);
-        if( pos.z- (ip.z - 1) <  0.1){
-            printf("On positon...\n");
-            land = 1;
+        printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
+            distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
+
+#define DISTANCE_HAS_KNOWN
+#undef DISTANCE_HAS_KNOWN
+
+#ifdef DISTANCE_HAS_KNOWN
+        if(api.get_setpoint_sendstatus() && setpoint){
+            
+            if(  (distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z) <  0.3) ){
+
+                api.set_setpoint_sendstatus(false);    // setpoint has been dealed
+
+                printf("Arrival to setpoint, loiter here %2ds", i);
+                while(i >= 0){
+                    printf("\b\b\b%2ds", i);
+                    fflush(stdout);
+                    sleep(1);
+                    i--;
+                }
+                printf("\n");
+
+                i = 10;
+
+                // if(setpoint){
+                    
+                    set_position( ip.x, ip.y+8, ip.z - 2.5, sp);
+                    api.update_setpoint(sp);  // THEN pixhawk will try to move
+                    setpoint--;
+                // }
+                sleep(1);
+                land = 1;
+            }
         }
 
-        if(land){
-            set_position( ip.x, ip.y, ip.z, sp);
-            api.update_setpoint(sp);  // THEN pixhawk will try to move
-            printf("Return to land...\n");
-            sleep(10);
+        if( !(api.get_setpoint_sendstatus()) && (land == 1)){
+            // printf("land...\n");
+            // set_land(sp);
+            // api.update_setpoint(sp); 
         }
+#else
+        i = 15;
+        while(i >= 0){
+            pos = api.current_messages.local_position_ned;
+             printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
+                distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
+             
+            printf("Arrival to setpoint, loiter here %2ds", i);
+            printf("\b\b\b%2ds", i);
+            printf("\n");
+            // fflush(stdout);
+            sleep(1);
+            i--;
+        }
+
+        set_position( ip.x, ip.y+8, ip.z - 2.5, sp);
+        api.update_setpoint(sp);  // THEN pixhawk will try to move
+
+        i = 15;
+        while(i >= 0){
+            pos = api.current_messages.local_position_ned;
+            printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
+                distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
+            printf("Arrival to setpoint, loiter here %2ds", i);
+            printf("\b\b\b%2ds", i);
+            printf("\n");
+            // fflush(stdout);
+            sleep(1);
+            i--;
+        }
+        set_position( ip.x+10, ip.y+8, ip.z - 2.5, sp);
+        api.update_setpoint(sp);  // THEN pixhawk will try to move
+        printf("Misson done....\n");
+        while(1){
+            sleep(1);
+            pos = api.current_messages.local_position_ned;
+            printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
+                distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
+        }
+
+#endif
 
         sleep(1);
     }
@@ -256,23 +336,16 @@ commands(Autopilot_Interface &api)
     printf("\n");
 
 error:
-
-    // --------------------------------------------------------------------------
     //   STOP OFFBOARD MODE
-    // --------------------------------------------------------------------------
     api.disable_offboard_control();
 
-    // --------------------------------------------------------------------------
     //   DISARMED
-    // --------------------------------------------------------------------------
     api.vehicle_disarm();
 
     // now pixhawk isn't listening to setpoint commands
+
 #ifdef DEBUG
-    // --------------------------------------------------------------------------
     //   GET A MESSAGE
-    // --------------------------------------------------------------------------
-    printf("READ SOME MESSAGES \n");
 
     // local position in ned frame
     mavlink_local_position_ned_t pos = messages.local_position_ned;
