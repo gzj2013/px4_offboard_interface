@@ -142,13 +142,11 @@ typedef struct __mavlink_set_attitude_target_t
 // helper functions
 uint64_t get_time_usec();
 void set_position(float x, float y, float z, mavlink_set_position_target_local_ned_t &sp);
-void set_position_velocity(float x, float y, float z, float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp);
 void set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp);
 void set_acceleration(float ax, float ay, float az, mavlink_set_position_target_local_ned_t &sp);
 void set_yaw(float yaw, mavlink_set_position_target_local_ned_t &sp);
 void set_yaw_rate(float yaw_rate, mavlink_set_position_target_local_ned_t &sp);
 void set_land( mavlink_set_position_target_local_ned_t &sp);
-// void set_land_vel(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp);
 
 void* start_autopilot_interface_read_thread(void *args);
 void* start_autopilot_interface_write_thread(void *args);
@@ -293,6 +291,24 @@ public:
 	void update_setpoint(mavlink_set_position_target_local_ned_t setpoint);
 	void read_messages();
 	int  write_message(mavlink_message_t message);
+
+	/*
+		Set paramters of PX4 instead of qgroundcontrol
+
+		@type: can be the following options:
+			MAV_PARAM_TYPE_UINT8	 // 8-bit unsigned integer 
+			MAV_PARAM_TYPE_INT8  	// 8-bit signed integer 
+			MAV_PARAM_TYPE_UINT16	 // 16-bit unsigned integer
+			MAV_PARAM_TYPE_INT16 	// 16-bit signed integer
+			MAV_PARAM_TYPE_UINT32	//32-bit unsigned integer 
+			MAV_PARAM_TYPE_INT32 	// 32-bit signed integer
+			MAV_PARAM_TYPE_UINT64	// 64-bit unsigned integer 
+			MAV_PARAM_TYPE_INT64 	// 64-bit signed integer 
+			MAV_PARAM_TYPE_REAL32	// 32-bit floating-point 
+			MAV_PARAM_TYPE_REAL64	// 64-bit floating-point
+			MAV_PARAM_TYPE_ENUM_END
+	*/
+	void set_parameters(const char *name, float value, uint8_t type);
 
 
 	void enable_offboard_control();

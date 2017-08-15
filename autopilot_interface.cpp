@@ -67,30 +67,6 @@ set_land(mavlink_set_position_target_local_ned_t &sp)
     printf("land cmd send...\n");
 }
 
-/*
- * Set target local ned velocity
- *
- * Modifies a mavlink_set_position_target_local_ned_t struct with target VX VY VZ
- * velocities in the Local NED frame, in meters per second.
- */
-void
-set_position_velocity(float x, float y, float z, float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp)
-{
-    sp.type_mask =
-        MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY     ;
-
-    sp.coordinate_frame = MAV_FRAME_LOCAL_NED;
-
-    sp.x   = x;
-    sp.y   = y;
-    sp.z   = z;
-
-    sp.vx  = vx;
-    sp.vy  = vy;
-    sp.vz  = vz;
-
-    //printf("VELOCITY SETPOINT UVW = [ %.4f , %.4f , %.4f ] \n", sp.vx, sp.vy, sp.vz);
-}
 
 void
 set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp)
@@ -169,7 +145,6 @@ set_yaw_rate(float yaw_rate, mavlink_set_position_target_local_ned_t &sp)
     sp.yaw_rate  = yaw_rate;
 }
 
-
 // ----------------------------------------------------------------------------------
 //   Autopilot Interface Class
 // ----------------------------------------------------------------------------------
@@ -234,6 +209,44 @@ set_setpoint_sendstatus(char status)
     setpoint_send_status = status;
 }
 
+/*
+Set paramters of PX4 instead of qgroundcontrol
+
+@type: can be the following options:
+    MAV_PARAM_TYPE_UINT8     // 8-bit unsigned integer 
+    MAV_PARAM_TYPE_INT8     // 8-bit signed integer 
+    MAV_PARAM_TYPE_UINT16    // 16-bit unsigned integer
+    MAV_PARAM_TYPE_INT16    // 16-bit signed integer
+    MAV_PARAM_TYPE_UINT32   //32-bit unsigned integer 
+    MAV_PARAM_TYPE_INT32    // 32-bit signed integer
+    MAV_PARAM_TYPE_UINT64   // 64-bit unsigned integer 
+    MAV_PARAM_TYPE_INT64    // 64-bit signed integer 
+    MAV_PARAM_TYPE_REAL32   // 32-bit floating-point 
+    MAV_PARAM_TYPE_REAL64   // 64-bit floating-point
+    MAV_PARAM_TYPE_ENUM_END
+*/
+void 
+Autopilot_Interface::
+set_parameters(const char *name, float value, uint8_t type)
+{
+    mavlink_param_set_t paramters;/* = attitude_setpoint*/;
+
+    paramters.target_system = system_id;
+    paramters.target_component = autopilot_id;
+    paramters.param_value = value;
+    strncpy(paramters.param_id, name, MAVLINK_MSG_PARAM_VALUE_FIELD_PARAM_ID_LEN);
+    paramters.param_type = type;
+
+    mavlink_message_t message;
+    mavlink_msg_param_set_encode(system_id,  companion_id, &message, &paramters);
+    
+    // do the write
+    int len = write_message(message);
+
+    // check the write
+    if ( len <= 0 )
+        fprintf(stderr,"WARNING: could not set paramters \n");
+}
 
 
 
@@ -530,14 +543,7 @@ write_set_att()
     att_sp.target_system    = system_id;
     att_sp.target_component = autopilot_id;
     att_sp.type_mask = MAVLINK_MSG_SET_ATTITUDE_TARGET_ATTITUDE;
-    // att_sp.q[0] = 0.707;
-    // att_sp.q[1] = 0;
-    // att_sp.q[2] = 0;
-    // att_sp.q[3] = -0.707;
-    // mavlink_euler_to_quaternion(float roll, float pitch, float yaw, float quaternion[4]);
-    mavlink_euler_to_quaternion(0, 0, 1.571, &att_sp.q[0]);  /*1.571*/
-    // mavlink_quaternion_to_euler(set_attitude_target.q,
-    //                                     &_att_sp.roll_body, &_att_sp.pitch_body, &_att_sp.yaw_body);
+    mavlink_euler_to_quaternion(0, 0, 1.571, att_sp.q);  /*yaw*/
 
     mavlink_message_t message;
     mavlink_msg_set_attitude_target_encode(system_id,  companion_id, &message, &att_sp);
@@ -547,8 +553,9 @@ write_set_att()
 
     // check the write
     if ( len <= 0 )
-        fprintf(stderr,"WARNING: could not send POSITION_TARGET_LOCAL_NED \n");
+        fprintf(stderr,"WARNING: could not send POSITION_ATTITUDE \n");
 }
+
 
 
 // ------------------------------------------------------------------------------

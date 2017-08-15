@@ -152,6 +152,9 @@ commands(Autopilot_Interface &api)
     mavlink_set_position_target_local_ned_t sp;
     mavlink_set_position_target_local_ned_t ip = api.initial_position;
 
+    api.set_parameters("MC_YAWRATE_MAX", 80.0, MAV_PARAM_TYPE_REAL32);
+    printf("set MC_YAWRATE_MAX done...\n");
+
     // autopilot_interface.h provides some helper functions to build the command
    
     /**
@@ -223,28 +226,14 @@ commands(Autopilot_Interface &api)
         //                    -0.15     , // [m/s]
   //                          sp        );
     //api.update_setpoint(sp);  // THEN pixhawk will try to move
-    //sleep(1);
-    
 
-    // // Example 2 - Set Position
-    // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
-    // set_position_velocity( 0.01, 0.01, 0.01, ip.x, ip.y, ip.z - 2.5, sp);
+    // Example 2 - Set Position
+    //  [NOTE] ip.z:Negative value will make vehicle fight up, Positive value will make it fight down;
     set_position( ip.x, ip.y, ip.z - 3.5, sp);
     api.update_setpoint(sp);  // THEN pixhawk will try to move
-    //sleep(1);
     
     // set_yaw( ip.yaw + 1.57 /*[rad]-[90 dgree]*/, sp  );
-    // set_velocity( 0.01       , // [m/s]
-    //                         0.01       , // [m/s]
-    //                         0.01       , // [m/s]
-    //                         sp        );
 
-    // Check position
-    int land = 0;
-    int setpoint = 1;
-    int on_x_position = 0;
-    int on_y_position = 0;
-    int on_z_position = 0;
     int loop_cnt = 0;
     int i = 20;
     int land_delay = 14;
@@ -256,44 +245,6 @@ commands(Autopilot_Interface &api)
         printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
             distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
 
-#define DISTANCE_HAS_KNOWN
-#undef DISTANCE_HAS_KNOWN
-
-#ifdef DISTANCE_HAS_KNOWN
-        if(api.get_setpoint_sendstatus() && setpoint){
-            
-            if(  (distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z) <  0.3) ){
-
-                api.set_setpoint_sendstatus(false);    // setpoint has been dealed
-
-                printf("Arrival to setpoint, loiter here %2ds", i);
-                while(i >= 0){
-                    printf("\b\b\b%2ds", i);
-                    fflush(stdout);
-                    sleep(1);
-                    i--;
-                }
-                printf("\n");
-
-                i = 20;
-
-                // if(setpoint){
-                    
-                    set_position( ip.x, ip.y+8, ip.z - 2.5, sp);
-                    api.update_setpoint(sp);  // THEN pixhawk will try to move
-                    setpoint--;
-                // }
-                sleep(1);
-                land = 1;
-            }
-        }
-
-        if( !(api.get_setpoint_sendstatus()) && (land == 1)){
-            // printf("land...\n");
-            // set_land(sp);
-            // api.update_setpoint(sp); 
-        }
-#else
         i = 20;
         while(i >= 0){
             pos = api.current_messages.local_position_ned;
@@ -351,15 +302,11 @@ commands(Autopilot_Interface &api)
 
             //if(!land_delay) {
                 // printf("land...\n");
-                // set_land(sp);
-                // api.update_setpoint(sp); 
                 // api.toggle_land_control(true);
                 // api.toggle_return_control(true);
             // }   
 
         }
-
-#endif
 
         sleep(1);
     }
