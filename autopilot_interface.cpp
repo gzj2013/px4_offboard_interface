@@ -95,7 +95,7 @@ set_position_velocity(float x, float y, float z, float vx, float vy, float vz, m
 void
 set_velocity(float vx, float vy, float vz, mavlink_set_position_target_local_ned_t &sp)
 {
-    sp.type_mask |=
+    sp.type_mask =
         MAVLINK_MSG_SET_POSITION_TARGET_LOCAL_NED_VELOCITY     ;
 
     sp.coordinate_frame = MAV_FRAME_LOCAL_NED;

@@ -218,19 +218,21 @@ commands(Autopilot_Interface &api)
     printf("SEND OFFBOARD COMMANDS\n");
 
     // Example 1 - Set Velocity
-    set_velocity( 0.15     , // [m/s]
-                            0.15      , // [m/s]
-                            0.15     , // [m/s]
-                            sp        );
-    api.update_setpoint(sp);  // THEN pixhawk will try to move
-    // sleep(3);
+    //set_velocity( 0.15     , // [m/s]
+      //                      0.15      , // [m/s]
+        //                    -0.15     , // [m/s]
+  //                          sp        );
+    //api.update_setpoint(sp);  // THEN pixhawk will try to move
+    //sleep(1);
+    
 
     // // Example 2 - Set Position
     // ip.z: [unit - m] NOTE: Negative value will make vehicle fight up, Positive value will make it fight down;
     // set_position_velocity( 0.01, 0.01, 0.01, ip.x, ip.y, ip.z - 2.5, sp);
-    set_position( ip.x, ip.y, ip.z - 2.5, sp);
+    set_position( ip.x, ip.y, ip.z - 3.5, sp);
     api.update_setpoint(sp);  // THEN pixhawk will try to move
-    sleep(1);
+    //sleep(1);
+    
     // set_yaw( ip.yaw + 1.57 /*[rad]-[90 dgree]*/, sp  );
     // set_velocity( 0.01       , // [m/s]
     //                         0.01       , // [m/s]
@@ -244,7 +246,7 @@ commands(Autopilot_Interface &api)
     int on_y_position = 0;
     int on_z_position = 0;
     int loop_cnt = 0;
-    int i = 10;
+    int i = 20;
     int land_delay = 14;
     while(1)
     {
@@ -273,7 +275,7 @@ commands(Autopilot_Interface &api)
                 }
                 printf("\n");
 
-                i = 10;
+                i = 20;
 
                 // if(setpoint){
                     
@@ -292,7 +294,7 @@ commands(Autopilot_Interface &api)
             // api.update_setpoint(sp); 
         }
 #else
-        i = 15;
+        i = 20;
         while(i >= 0){
             pos = api.current_messages.local_position_ned;
              printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
@@ -306,10 +308,10 @@ commands(Autopilot_Interface &api)
             i--;
         }
 
-        set_position( ip.x, ip.y+8, ip.z - 2.5, sp);
+        set_position( ip.x, ip.y+4, ip.z - 3.5, sp);
         api.update_setpoint(sp);  // THEN pixhawk will try to move
 
-        i = 15;
+        i = 20;
         while(i >= 0){
             pos = api.current_messages.local_position_ned;
             printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
@@ -321,7 +323,22 @@ commands(Autopilot_Interface &api)
             sleep(1);
             i--;
         }
-        set_position( ip.x+10, ip.y+8, ip.z - 2.5, sp);
+        set_position( ip.x+5, ip.y+4, ip.z - 3.5, sp);
+        api.update_setpoint(sp);  // THEN pixhawk will try to move
+
+        i = 20;
+        while(i >= 0){
+            pos = api.current_messages.local_position_ned;
+            printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
+                distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
+            printf("Arrival to setpoint, loiter here %2ds", i);
+            printf("\b\b\b%2ds", i);
+            printf("\n");
+            // fflush(stdout);
+            sleep(1);
+            i--;
+        }
+        set_position( ip.x, ip.y, ip.z -3.5, sp);
         api.update_setpoint(sp);  // THEN pixhawk will try to move
         printf("Misson done....\n");
        
@@ -332,13 +349,13 @@ commands(Autopilot_Interface &api)
             printf("Current Position = [ % .4f , % .4f , % .4f ]  , d=% .4f\n", pos.x, pos.y, pos.z, 
                 distance(pos.x, pos.y, pos.z, sp.x, sp.y, sp.z));
 
-            if(!land_delay) {
-                printf("land...\n");
+            //if(!land_delay) {
+                // printf("land...\n");
                 // set_land(sp);
                 // api.update_setpoint(sp); 
                 // api.toggle_land_control(true);
-                api.toggle_return_control(true);
-             }   
+                // api.toggle_return_control(true);
+            // }   
 
         }
 
