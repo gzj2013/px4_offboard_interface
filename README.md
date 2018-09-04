@@ -1,32 +1,38 @@
-px4_offboard_interface Exampe
 ========================
 
-This is a simple MAVLink to interface example for Unix-like systems that can 
-allow communication between Pixhawk and an offboard computer.
+# 基于 PX4 的 OffBoard 模式下的通信控制实例 Exampe
 
-This example will recieve one MAVlink message and send one MAVlink message.
+========================
 
+可以实现 Pixhawk 和一个外接 OffBoard 电脑直接拿的通信, 通信协议基于 MAVLink 接口.  
 
-1. Building
+因此, 程序中可以接收和发送 MAVLink 消息.
+
 ========
 
-```
+## 1. 编译
+
+========
+
+```bash
 $ cd px4_offboard_interface/
 $ make
 ```
 
-2. Run the Example Executable
------------------------------
+========
+
+## 2. Run  
+
+========
 
 ```
 $ cd px4_offboard_interface/
 $ ./px4_offboard_control  -d /dev/ttyUSB0 -b 57600
 ```
 
-To stop the program, use the key sequence ```Ctrl-C```.
+停止程序, 使用 ```Ctrl-C```.
 
-
-3. Here's an example output:
+程序输出信息:   
 
 ```
 OPEN PORT
@@ -93,52 +99,3 @@ CLOSE THREADS
 CLOSE PORT
 
 ```
-
-4. Exploration
-===========
-
-There are a few things to explore past this example.
-
-For steps 2 and 3 from the above tutorial, you'll use a different port.  
-On the off-board computer side, the port might now be ```/dev/ttyUSB0```.  
-
-Now add a print statement in the Pixhawk Firmware to see received messages.  
-Build and upload this to Pixhawk.
-
-```
-[Firmware/src/modules/mavlink/mavlink_receiver.cpp : line 1351]
-/* if read failed, this loop won't execute */
-for (ssize_t i = 0; i < nread; i++) {
-	if (mavlink_parse_char(_mavlink->get_channel(), buf[i], &msg, &status)) {
-
-		/* --- REPORT HANDLING OF MESSAGE --- */
-		printf("\n");
-		printf("HANDLE MESSAGE\n");
-		printf("MSGID:%i\n",msg.msgid);
-
-		/* handle generic messages and commands */
-		handle_message(&msg);
-```
-
-On the off-board side, in another terminal run the ```px4_offboard_interface``` executable. 
-You should see output in the NuttX shell similar to this:
-
-```
-HANDLE MESSAGE
-MSGID:76
-
-HANDLE MESSAGE
-MSGID:84
-
-(...)
-
-HANDLE MESSAGE
-MSGID:84
-
-HANDLE MESSAGE
-MSGID:76
-```
-
-Past this, you can:
-- Modify the received message data type
-- Modify the sent message data type
